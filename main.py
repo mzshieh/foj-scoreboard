@@ -10,7 +10,7 @@ parser.add_argument('-t','--token',type=str,default='',
 parser.add_argument('-a','--api',type=str,default='https://api.oj.nctu.me/',
                     help='Formosa OJ API base URL (default: %(default)s)')
 parser.add_argument('-p','--problems',type=eval,default=[],
-                    help='Problem list')
+                    help='Problem list (use python format)')
 parser.add_argument('-s','--students',type=str,default='student.txt',
                     help='Student list (default: %(default)s)')
 parser.add_argument('-d','--deadline',default='2099-01-01 00:00:00',
@@ -19,14 +19,36 @@ parser.add_argument('-m','--meta',default=None,
                     help='JSON meta file (Optional)')
 
 args = parser.parse_args()
+if args.meta!=None:
+    with open(args.meta) as FILE:
+        meta = json.dump(FILE)
+else:
+    meta = {'homeworks':[{'id':'', 
+                          'gid':args.group,
+                          'pids': args.problems,
+                          'deadline': args.deadline}]}
+
+if meta.get('api'):
+    args.api = meta.get('api')
+if meta.get('token'):
+    args.token = meta.get('token')
+if meta.get('students'):
+    args.students = meta.get('students')
+if meta.get('homeworks'):
+    homeworks = meta.get('homeworks')
+else:
+    homeworks = [{'id':'', 
+                  'gid':args.group,
+                  'pids': args.problems,
+                  'deadline': args.deadline}]}
 
 def read_user_list(filename):
     with open(filename, 'r') as fp:
         users=[name for name in fp.read().split() if name[0]!='#']
     return sorted(users)
 
-def calculate_score(pids=[], deadline='2099-10-01 00:00:00'):
-    oj = FOJ(args.api,args.group,args.token)
+def calculate_score(gid,pids=[], deadline='2099-10-01 00:00:00'):
+    oj = FOJ(args.api,gid,args.token)
     time_format = '%Y-%m-%d %H:%M:%S'
     deadline = datetime.datetime.strptime(deadline, time_format)
     users = oj.get_users(reverse=True)
@@ -41,15 +63,10 @@ def calculate_score(pids=[], deadline='2099-10-01 00:00:00'):
     return score
 
 def main():
-    if args.meta:
-        with open(args.meta, 'r') as fp:
-            hws = json.load(fp)
-    else:
-        hws = [{'id':'', 'pids':args.problems, 'deadline':args.deadline}]
-    for hw in hws:
+    for hw in homeworks:
         idx = hw['id']
         pids = sorted(hw['pids'])
-        score = calculate_score(pids, hw['deadline'])
+        score = calculate_score(hw['gid'], pids, hw['deadline'])
         B = {k: [v[p] for p in pids] for k, v in score.items()}
         H = ['ID']+pids
         path = 'HW{0}.html'.format(idx)
