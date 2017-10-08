@@ -21,12 +21,9 @@ parser.add_argument('-m','--meta',default=None,
 args = parser.parse_args()
 if args.meta!=None:
     with open(args.meta) as FILE:
-        meta = json.dump(FILE)
+        meta = json.load(FILE)
 else:
-    meta = {'homeworks':[{'id':'', 
-                          'gid':args.group,
-                          'pids': args.problems,
-                          'deadline': args.deadline}]}
+    meta = {}
 
 if meta.get('api'):
     args.api = meta.get('api')
@@ -40,7 +37,7 @@ else:
     homeworks = [{'id':'', 
                   'gid':args.group,
                   'pids': args.problems,
-                  'deadline': args.deadline}]}
+                  'deadline': args.deadline}]
 
 def read_user_list(filename):
     with open(filename, 'r') as fp:
