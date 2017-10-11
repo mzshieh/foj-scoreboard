@@ -39,7 +39,7 @@ else:
                   'pids': args.problems,
                   'deadline': args.deadline}]
 
-def read_user_list(filename):
+def get_students(filename):
     with open(filename, 'r') as fp:
         users=[name for name in fp.read().split() if name[0]!='#']
     return sorted(users)
@@ -49,7 +49,7 @@ def calculate_score(gid,pids=[], deadline='2099-10-01 00:00:00'):
     time_format = '%Y-%m-%d %H:%M:%S'
     deadline = datetime.datetime.strptime(deadline, time_format)
     users = oj.get_users(reverse=True)
-    students = read_user_list(args.students)
+    students = get_students(args.students)
     score = {stud: {pid:-1 for pid in pids} for stud in students}
     for sub in oj.get_submissions():
         uid = users.get(sub['user_id'], '')
