@@ -8,10 +8,12 @@ class FOJ:
         self.api = api_base
         self.gid = group_id
         self.cookies = {'token':token}
+        self.s = requests.Session()
 
     def get_users(self,reverse=False):
         url=self.api+'groups/{}/users/'.format(self.gid)
-        res = requests.get(url,cookies=self.cookies).text
+        #res = requests.get(url,cookies=self.cookies).text
+        res = self.s.get(url,cookies=self.cookies).text
         if reverse:
             return {user['id']:user['name'] for user in json.loads(res)['msg']}
         return {user['name']:user['id'] for user in json.loads(res)['msg']}
@@ -21,10 +23,18 @@ class FOJ:
         if uid>0: url += '&user_id={}'.format(uid)
         if pid>0: url += '&problem_id={}'.format(pid)
         url += '&count={}'.format(count)
-        res = requests.get(url,cookies=self.cookies).text
+        #res = requests.get(url,cookies=self.cookies).text
+        res = self.s.get(url,cookies=self.cookies).text
         return json.loads(res)['msg']['submissions']
 
     def get_source(self,submission_id):
         url = self.api+'submissions/{}/file/'.format(submission_id)
-        res = requests.get(url,cookies=self.cookies).text
+        #res = requests.get(url,cookies=self.cookies).text
+        res = self.s.get(url,cookies=self.cookies).text
         return res
+
+    def get_filename(self,submission_id):
+        url = self.api+'submissions/{}/'.format(submission_id)
+        #res = requests.get(url,cookies=self.cookies).text
+        res = self.s.get(url,cookies=self.cookies).text
+        return json.loads(res)['msg']['filename']

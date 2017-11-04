@@ -51,17 +51,18 @@ def get_source(gid,pids=[], deadline='2099-10-01 00:00:00'):
     users = oj.get_users(reverse=True)
     students = get_students(args.students)
     for sub in oj.get_submissions():
-        print(sub)
         sid = sub['id']
         uid = users.get(sub['user_id'], '')
         pid = sub['problem_id']
         subtime = datetime.datetime.strptime(sub['created_at'], time_format)
         if uid in students and pid in pids and subtime<deadline and sub['score']!=None:
+            print('Processing {}\'s submission {}'.format(uid,sid))
+            filename = oj.get_filename(sid)
             directory = '{}/{}'.format(pid,uid)
             os.makedirs(directory,exist_ok=True)
             source_code = oj.get_source(sid)
-            with open('{}/{}'.format(directory,sid),'w') as FILE:
-                FILE.write(source_code)
+            with open('{}/{}-{}'.format(directory,sid,filename),'w') as FILE:
+                print(source_code,end='',file=FILE)
 
 def main():
     for hw in homeworks:
