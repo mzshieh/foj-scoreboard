@@ -23,3 +23,8 @@ class FOJ:
         url += '&count={}'.format(count)
         res = requests.get(url,cookies=self.cookies).text
         return json.loads(res)['msg']['submissions']
+
+    def get_source(self,submission_id):
+        url = self.api+'submissions/{}/file/'.format(submission_id)
+        res = requests.get(url,cookies=self.cookies).text
+        return res

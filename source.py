@@ -1,8 +1,8 @@
-import sys, datetime, requests, json, argparse, time
+import sys, datetime, requests, json, argparse, time, os
 from foj import FOJ
 from gen import table
 
-parser = argparse.ArgumentParser(description='Generate Homework Scores')
+parser = argparse.ArgumentParser(description='Get Homework Source')
 parser.add_argument('-g','--group',type=int,default=7,
                     help='Group ID')
 parser.add_argument('-t','--token',type=str,default='',
@@ -44,32 +44,30 @@ def get_students(filename):
         users=[name for name in fp.read().split() if name[0]!='#']
     return sorted(users)
 
-def calculate_score(gid,pids=[], deadline='2099-10-01 00:00:00'):
+def get_source(gid,pids=[], deadline='2099-10-01 00:00:00'):
     oj = FOJ(args.api,gid,args.token)
     time_format = '%Y-%m-%d %H:%M:%S'
     deadline = datetime.datetime.strptime(deadline, time_format)
     users = oj.get_users(reverse=True)
     students = get_students(args.students)
-    score = {stud: {pid:-1 for pid in pids} for stud in students}
     for sub in oj.get_submissions():
         print(sub)
+        sid = sub['id']
         uid = users.get(sub['user_id'], '')
         pid = sub['problem_id']
         subtime = datetime.datetime.strptime(sub['created_at'], time_format)
         if uid in students and pid in pids and subtime<deadline and sub['score']!=None:
-            score[uid][pid]=max(score[uid][pid], sub['score'])
-    return score
+            directory = '{}/{}'.format(pid,uid)
+            os.makedirs(directory,exist_ok=True)
+            source_code = oj.get_source(sid)
+            with open('{}/{}'.format(directory,sid),'w') as FILE:
+                FILE.write(source_code)
 
 def main():
     for hw in homeworks:
         idx = hw['id']
         pids = sorted(hw['pids'])
-        score = calculate_score(hw['gid'], pids, hw['deadline'])
-        B = {k: [v[p] for p in pids] for k, v in score.items()}
-        H = ['ID']+pids
-        path = 'HW{0}.html'.format(idx)
-        with open(path, 'w') as fp:
-            print(table(idx, H, B), file=fp)
+        get_source(hw['gid'], pids, hw['deadline'])
 
 if __name__=='__main__':
     main()
